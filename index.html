@@ -822,10 +822,42 @@
                 weekChevron.classList.remove('rotate-180');
             }
         });
+        document.addEventListener('touchstar', (e) => {
+            if (!unitTestBtn.contains(e.target) && !unitDropdown.contains(e.target)) {
+                unitDropdown.classList.add('hidden');
+                unitChevron.classList.remove('rotate-180');
+            }
+
+            if (!weekTestBtn.contains(e.target) && !weekDropdown.contains(e.target)) {
+                weekDropdown.classList.add('hidden');
+                weekChevron.classList.remove('rotate-180');
+            }
+        });
 
         // 选择测试类型和编号
         testOptions.forEach(option => {
             option.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                currentTestType = option.dataset.type;
+                if (unitRandom === 1) {
+                    currentTestType = 'unit'
+                    currentTestType = option.dataset.type;
+                }
+                if (weekRandom === 1) {
+                    currentTestType = 'week'
+                    currentTestType = option.dataset.type;
+                }
+                currentTestNumber = parseInt(option.dataset.number);
+
+                console.log(currentTestType, unitRandom, weekRandom)
+
+                // 初始化测试
+                startTest();
+            });
+        });
+        testOptions.forEach(option => {
+            option.addEventListener('touchstar', (e) => {
                 e.preventDefault();
 
                 currentTestType = option.dataset.type;
@@ -851,9 +883,16 @@
             spellingPage.classList.add('hidden');
             startPage.classList.remove('hidden');
         });
+        backToStartBtn.addEventListener('touchstar', () => {
+            spellingPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+        });
 
         // 完成测试后返回测试页面
         btn.addEventListener('click', () => {
+            completionModal.classList.add('hidden');
+        });
+        btn.addEventListener('touchstar', () => {
             completionModal.classList.add('hidden');
         });
 
@@ -863,9 +902,15 @@
             spellingPage.classList.add('hidden');
             startPage.classList.remove('hidden');
         });
+        finishBtn.addEventListener('touchstar', () => {
+            completionModal.classList.add('hidden');
+            spellingPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+        });
 
         // 检查拼写
         checkBtn.addEventListener('click', checkSpelling);
+        checkBtn.addEventListener('touchstar', checkSpelling);
 
         // 按Enter键检查拼写
         spellingInput.addEventListener('keydown', (e) => {
@@ -886,9 +931,28 @@
                 updateNavigationButtons();
             }
         });
+        prevBtn.addEventListener('touchstar', () => {
+            if (currentWordIndex > 0) {
+                currentWordIndex--;
+                updateWordDisplay();
+                resetInputAndFeedback();
+                updateNavigationButtons();
+            }
+        });
 
         // 下一个单词
         nextBtn.addEventListener('click', () => {
+            if (currentWordIndex < currentWords.length - 1) {
+                currentWordIndex++;
+                updateWordDisplay();
+                resetInputAndFeedback();
+                updateNavigationButtons();
+            } else {
+                // 最后一个单词，显示完成对话框
+                showCompletionModal();
+            }
+        });
+        nextBtn.addEventListener('touchstar', () => {
             if (currentWordIndex < currentWords.length - 1) {
                 currentWordIndex++;
                 updateWordDisplay();
@@ -907,9 +971,26 @@
                 speakWord(word);
             }
         });
+        pronounceBtn.addEventListener('touchstar', () => {
+            if (soundEnabled) {
+                const word = currentWords[currentWordIndex].word;
+                speakWord(word);
+            }
+        });
 
         // 声音开关
         soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            const icon = soundToggle.querySelector('i');
+            if (soundEnabled) {
+                icon.classList.remove('fa-volume-off');
+                icon.classList.add('fa-volume-up');
+            } else {
+                icon.classList.remove('fa-volume-up');
+                icon.classList.add('fa-volume-off');
+            }
+        });
+        soundToggle.addEventListener('touchstar', () => {
             soundEnabled = !soundEnabled;
             const icon = soundToggle.querySelector('i');
             if (soundEnabled) {
@@ -930,6 +1011,20 @@
             }
         })
         randomWeek.addEventListener('click', () => {
+            if (randomWeek.checked === true) {
+                weekRandom = 1
+            } else if (randomWeek.checked === false) {
+                weekRandom = 0
+            }
+        })
+        randomUnit.addEventListener('touchstar', () => {
+            if (randomUnit.checked === true) {
+                unitRandom = 1
+            } else if (randomUnit.checked === false) {
+                unitRandom = 0
+            }
+        })
+        randomWeek.addEventListener('touchstar', () => {
             if (randomWeek.checked === true) {
                 weekRandom = 1
             } else if (randomWeek.checked === false) {
