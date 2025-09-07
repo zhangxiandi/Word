@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词拼写测试</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        accent: '#722ED1',
+                        neutral: '#F5F7FA',
+                        dark: '#1D2129'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            }
+            .transition-custom {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+    </style>
+
+    <style>
+        /* 基础动画定义 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scale-in {
+            animation: scaleIn 0.3s ease-in-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 输入框焦点动画 */
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-neutral min-h-screen font-sans text-dark">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-custom">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-book text-primary text-2xl" id="title-i"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-primary" id="title-text">单词拼写测试</h1>
+            </div>
+            <button id="sound-toggle" class="p-2 rounded-full hover:bg-gray-100 transition-custom">
+                <i class="fa fa-volume-up text-gray-600"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-16">
+        <!-- 开始页面 -->
+        <section id="start-page" class="fade-in">
+            <div class="text-center mb-12">
+                <button id="rotate-btn">
+                    <i class="fa fa-times fa-2x text-primary cursor-pointer transition-transform duration-300" id="rotate-btn-i"></i>
+                </button>
+            </div>
+
+            <div class="max-w-5xl mx-auto">
+                <!-- 单元测试卡片 -->
+                <div
+                    class="bg-white rounded-xl p-6 card-shadow hover:shadow-lg transition-custom transform hover:-translate-y-1"
+                    id="unit-test-card">
+                    <div class="flex justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                                <i class="fa fa-list-ol text-primary text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold">单元测试</h3>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">乱序：</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" id="random-switch-unit">
+                                <div
+                                    class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-600 mb-6">针对每个学习单元的单词进行拼写练习，适合日常巩固</p>
+
+                    <!-- 下拉菜单 -->
+                    <div class="relative">
+                        <button id="unit-test-btn"
+                            class="w-full bg-neutral hover:bg-gray-200 text-left px-4 py-3 rounded-lg flex justify-between items-center transition-custom">
+                            <span>选择单元</span>
+                            <i class="fa fa-chevron-down text-gray-500 transition-transform duration-300"
+                                id="unit-chevron"></i>
+                        </button>
+
+                        <div id="unit-dropdown"
+                            class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg overflow-hidden z-50">
+                            <ul class="divide-y overflow-auto max-h-96">
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="1">单元 1</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="2">单元 2</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="3">单元 3</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="4">单元 4</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="5">单元 5</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="6">单元 6</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="7">单元 7</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="8">单元 8</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="9">单元 9</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="10">单元 10</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="11">单元 11</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="12">单元 12</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="13">单元 13</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="14">单元 14</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="15">单元 15</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="16">单元 16</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="17">单元 17</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="18">单元 18</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="19">单元 19</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="20">单元 20</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="21">单元 21</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="22">单元 22</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="23">单元 23</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="24">单元 24</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="25">单元 25</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="26">单元 26</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="27">单元 27</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="28">单元 28</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="29">单元 29</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="30">单元 30</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="31">单元 31</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="32">单元 32</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="33">单元 33</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="34">单元 34</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="35">单元 35</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="36">单元 36</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="37">单元 37</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="38">单元 38</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="39">单元 39</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="40">单元 40</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="41">单元 41</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="42">单元 42</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="43">单元 43</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="44">单元 44</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="45">单元 45</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="46">单元 46</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="47">单元 47</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="48">单元 48</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="49">单元 49</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="50">单元 50</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="51">单元 51</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="52">单元 52</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="53">单元 53</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="54">单元 54</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="55">单元 55</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="56">单元 56</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="57">单元 57</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="58">单元 58</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="59">单元 59</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="60">单元 60</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="61">单元 61</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="62">单元 62</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="63">单元 63</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="64">单元 64</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="65">单元 65</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="66">单元 66</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="67">单元 67</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="68">单元 68</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="69">单元 69</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="70">单元 70</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="71">单元 71</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="72">单元 72</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="73">单元 73</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="74">单元 74</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="75">单元 75</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="76">单元 76</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="77">单元 77</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="78">单元 78</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="79">单元 79</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="80">单元 80</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="81">单元 81</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="82">单元 82</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="83">单元 83</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="84">单元 84</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="85">单元 85</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="86">单元 86</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="87">单元 87</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="88">单元 88</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="89">单元 89</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="90">单元 90</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="91">单元 91</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="92">单元 92</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="93">单元 93</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="94">单元 94</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="95">单元 95</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="96">单元 96</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="97">单元 97</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="98">单元 98</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="99">单元 99</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-primary/20 transition-custom"
+                                        data-type="unit" data-number="100">单元 100</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 周测卡片 -->
+                <div
+                    class="hidden bg-white rounded-xl p-6 card-shadow hover:shadow-lg transition-custom transform hover:-translate-y-1"
+                    id="week-test-card">
+                    <div class="flex justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mr-4">
+                                <i class="fa fa-calendar text-accent text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold">周测</h3>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">乱序：</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" id="random-switch-week">
+                                <div
+                                    class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-600 mb-6">综合一周所学的单词进行测试，检验学习成果</p>
+
+                    <!-- 下拉菜单 -->
+                    <div class="relative">
+                        <button id="week-test-btn"
+                            class="w-full bg-neutral hover:bg-gray-200 text-left px-4 py-3 rounded-lg flex justify-between items-center transition-custom">
+                            <span>选择周次</span>
+                            <i class="fa fa-chevron-down text-gray-500 transition-transform duration-300"
+                                id="week-chevron"></i>
+                        </button>
+                        <div id="week-dropdown"
+                            class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg overflow-hidden z-10">
+                            <ul class="divide-y overflow-auto max-h-96">
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="1">第 1 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="2">第 2 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="3">第 3 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="4">第 4 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="5">第 5 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="6">第 6 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="7">第 7 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="8">第 8 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="9">第 9 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="10">第 10 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="11">第 11 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="12">第 12 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="13">第 13 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="14">第 14 周</a></li>
+                                <li><a href="#" class="test-option block px-4 py-3 hover:bg-purple-600/20 transition-custom"
+                                        data-type="week" data-number="15">第 15 周</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 拼写测试页面 -->
+        <section id="spelling-page" class="hidden max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <button id="back-to-start" class="text-gray-600 hover:text-primary flex items-center transition-custom">
+                    <i class="fa fa-arrow-left mr-2"></i>
+                    <span>返回</span>
+                </button>
+                <div class="text-sm text-gray-500" id="progress-indicator">1/10</div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow scale-in">
+                <div class="mb-8 text-center">
+                    <h3 class="text-lg md:text-xl font-semibold text-gray-500 mb-2" id="test-title">单元 1 - 基础词汇</h3>
+                    <div class="flex justify-center items-center mb-4">
+                        <button id="pronounce-btn"
+                            class="p-3 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-custom">
+                            <i class="fa fa-volume-up"></i>
+                        </button>
+                    </div>
+                    <p class="text-3xl md:text-4xl font-bold text-primary mb-2 hidden" id="word-hint">apple</p>
+                    <p class="text-gray-500 italic" id="word-definition">n. 苹果</p>
+                </div>
+
+                <div class="mb-8">
+                    <label for="spelling-input" class="block text-sm font-medium text-gray-700 mb-2">请拼写这个单词：</label>
+                    <div class="flex">
+                        <input type="text" id="spelling-input"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg input-focus outline-none"
+                            placeholder="在此输入拼写...">
+                        <button id="check-btn"
+                            class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-r-lg transition-custom">
+                            检查
+                        </button>
+                    </div>
+                    <div id="feedback" class="mt-3 hidden"></div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button id="prev-btn"
+                        class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-custom disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <i class="fa fa-chevron-left mr-2"></i>上一个
+                    </button>
+                    <button id="next-btn"
+                        class="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition-custom">
+                        下一个<i class="fa fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 完成测试对话框 -->
+            <div id="completion-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 scale-in">
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4">
+                            <i class="fa fa-check text-secondary text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">测试完成！</h3>
+                        <p class="text-gray-600" id="score-display">你的得分：8/10</p>
+                    </div>
+                    <div class="flex justify-around">
+                        <button id="btn"
+                            class="w-1/3 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
+                            返回
+                        </button>
+                        <button id="finish-btn"
+                            class="w-1/3 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
+                            返回首页
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t mt-16">
+        <div class="container mx-auto px-4 py-6 text-center text-gray-500 text-sm">
+            <p>单词拼写测试 &copy; 2023 - 提升你的词汇能力</p>
+        </div>
+    </footer>
+
+    <script src="./Words/Unit/Unit.js"></script>
+    <script>
+        // 单词数据库
+        const wordDatabase = {
+            // 单元测试单词
+            unit: {
+                1: window.unitWords.Unit1,
+                2: window.unitWords.Unit2,
+                3: window.unitWords.Unit3,
+                4: window.unitWords.Unit4,
+                5: window.unitWords.Unit5,
+                6: window.unitWords.Unit6,
+                7: window.unitWords.Unit7,
+                8: window.unitWords.Unit8,
+                9: window.unitWords.Unit9,
+                10: window.unitWords.Unit10,
+                11: window.unitWords.Unit11,
+                12: window.unitWords.Unit12,
+                13: window.unitWords.Unit13,
+                14: window.unitWords.Unit14,
+                15: window.unitWords.Unit15,
+                16: window.unitWords.Unit16,
+                17: window.unitWords.Unit17,
+                18: window.unitWords.Unit18,
+                19: window.unitWords.Unit19,
+                20: window.unitWords.Unit20,
+                21: window.unitWords.Unit21,
+                22: window.unitWords.Unit22,
+                23: window.unitWords.Unit23,
+                24: window.unitWords.Unit24,
+                25: window.unitWords.Unit25,
+                26: window.unitWords.Unit26,
+                27: window.unitWords.Unit27,
+                28: window.unitWords.Unit28,
+                29: window.unitWords.Unit29,
+                30: window.unitWords.Unit30,
+                31: window.unitWords.Unit31,
+                32: window.unitWords.Unit32,
+                33: window.unitWords.Unit33,
+                34: window.unitWords.Unit34,
+                35: window.unitWords.Unit35,
+                36: window.unitWords.Unit36,
+                37: window.unitWords.Unit37,
+                38: window.unitWords.Unit38,
+                39: window.unitWords.Unit39,
+                40: window.unitWords.Unit40,
+                41: window.unitWords.Unit41,
+                42: window.unitWords.Unit42,
+                43: window.unitWords.Unit43,
+                44: window.unitWords.Unit44,
+                45: window.unitWords.Unit45,
+                46: window.unitWords.Unit46,
+                47: window.unitWords.Unit47,
+                48: window.unitWords.Unit48,
+                49: window.unitWords.Unit49,
+                50: window.unitWords.Unit50,
+                51: window.unitWords.Unit51,
+                52: window.unitWords.Unit52,
+                53: window.unitWords.Unit53,
+                54: window.unitWords.Unit54,
+                55: window.unitWords.Unit55,
+                56: window.unitWords.Unit56,
+                57: window.unitWords.Unit57,
+                58: window.unitWords.Unit58,
+                59: window.unitWords.Unit59,
+                60: window.unitWords.Unit60,
+                61: window.unitWords.Unit61,
+                62: window.unitWords.Unit62,
+                63: window.unitWords.Unit63,
+                64: window.unitWords.Unit64,
+                65: window.unitWords.Unit65,
+                66: window.unitWords.Unit66,
+                67: window.unitWords.Unit67,
+                68: window.unitWords.Unit68,
+                69: window.unitWords.Unit69,
+                70: window.unitWords.Unit70,
+                71: window.unitWords.Unit71,
+                72: window.unitWords.Unit72,
+                73: window.unitWords.Unit73,
+                74: window.unitWords.Unit74,
+                75: window.unitWords.Unit75,
+                76: window.unitWords.Unit76,
+                77: window.unitWords.Unit77,
+                78: window.unitWords.Unit78,
+                79: window.unitWords.Unit79,
+                80: window.unitWords.Unit80,
+                81: window.unitWords.Unit81,
+                82: window.unitWords.Unit82,
+                83: window.unitWords.Unit83,
+                84: window.unitWords.Unit84,
+                85: window.unitWords.Unit85,
+                86: window.unitWords.Unit86,
+                87: window.unitWords.Unit87,
+                88: window.unitWords.Unit88,
+                89: window.unitWords.Unit89,
+                90: window.unitWords.Unit90,
+                91: window.unitWords.Unit91,
+                92: window.unitWords.Unit92,
+                93: window.unitWords.Unit93,
+                94: window.unitWords.Unit94,
+                95: window.unitWords.Unit95,
+                96: window.unitWords.Unit96,
+                97: window.unitWords.Unit97,
+                98: window.unitWords.Unit98,
+                99: window.unitWords.Unit99,
+                100: window.unitWords.Unit100
+            },
+            // 周测单词
+            week: {
+                1: [
+                    { word: "one", definition: "num. 一" },
+                    { word: "two", definition: "num. 二" },
+                    { word: "three", definition: "num. 三" },
+                    { word: "four", definition: "num. 四" },
+                    { word: "five", definition: "num. 五" },
+                    { word: "six", definition: "num. 六" },
+                    { word: "seven", definition: "num. 七" },
+                    { word: "eight", definition: "num. 八" },
+                    { word: "nine", definition: "num. 九" },
+                    { word: "ten", definition: "num. 十" }
+                ],
+                2: [
+                    { word: "red", definition: "adj. 红色的" },
+                    { word: "blue", definition: "adj. 蓝色的" },
+                    { word: "green", definition: "adj. 绿色的" },
+                    { word: "yellow", definition: "adj. 黄色的" },
+                    { word: "black", definition: "adj. 黑色的" },
+                    { word: "white", definition: "adj. 白色的" },
+                    { word: "purple", definition: "adj. 紫色的" },
+                    { word: "orange", definition: "adj. 橙色的" },
+                    { word: "pink", definition: "adj. 粉色的" },
+                    { word: "brown", definition: "adj. 棕色的" }
+                ],
+                3: [
+                    { word: "monday", definition: "n. 星期一" },
+                    { word: "tuesday", definition: "n. 星期二" },
+                    { word: "wednesday", definition: "n. 星期三" },
+                    { word: "thursday", definition: "n. 星期四" },
+                    { word: "friday", definition: "n. 星期五" },
+                    { word: "saturday", definition: "n. 星期六" },
+                    { word: "sunday", definition: "n. 星期日" },
+                    { word: "month", definition: "n. 月" },
+                    { word: "year", definition: "n. 年" },
+                    { word: "day", definition: "n. 天" }
+                ],
+                4: [
+                    { word: "run", definition: "v. 跑" },
+                    { word: "jump", definition: "v. 跳" },
+                    { word: "walk", definition: "v. 走" },
+                    { word: "swim", definition: "v. 游泳" },
+                    { word: "sing", definition: "v. 唱歌" },
+                    { word: "dance", definition: "v. 跳舞" },
+                    { word: "read", definition: "v. 读" },
+                    { word: "write", definition: "v. 写" },
+                    { word: "draw", definition: "v. 画" },
+                    { word: "play", definition: "v. 玩" }
+                ]
+            }
+        };
+
+        // 全局状态
+        let currentTestType = 'unit';
+        let currentTestNumber = 1;
+        let currentWordIndex = 0;
+        let userScore = 0;
+        let currentWords = [];
+        let weekRandom = 0
+        let unitRandom = 0
+
+        // DOM 元素
+        const titleI = document.getElementById('title-i')
+        const titleText = document.getElementById('title-text')
+
+        const rotateBtn = document.getElementById('rotate-btn')
+        const rotateI = document.getElementById('rotate-btn-i')
+
+        const startPage = document.getElementById('start-page');
+        const spellingPage = document.getElementById('spelling-page');
+        const completionModal = document.getElementById('completion-modal');
+        const randomUnit = document.getElementById('random-switch-unit')
+        const randomWeek = document.getElementById('random-switch-week')
+
+        const unitTestCard = document.getElementById('unit-test-card')
+        const weekTestCard = document.getElementById('week-test-card')
+        const unitTestBtn = document.getElementById('unit-test-btn');
+        const weekTestBtn = document.getElementById('week-test-btn');
+        const unitDropdown = document.getElementById('unit-dropdown');
+        const weekDropdown = document.getElementById('week-dropdown');
+        const unitChevron = document.getElementById('unit-chevron');
+        const weekChevron = document.getElementById('week-chevron');
+
+        const testOptions = document.querySelectorAll('.test-option');
+        const backToStartBtn = document.getElementById('back-to-start');
+        const btn = document.getElementById('btn')
+        const finishBtn = document.getElementById('finish-btn');
+
+        const testTitle = document.getElementById('test-title');
+        const wordHint = document.getElementById('word-hint');
+        const wordDefinition = document.getElementById('word-definition');
+        const spellingInput = document.getElementById('spelling-input');
+        const checkBtn = document.getElementById('check-btn');
+        const feedback = document.getElementById('feedback');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const scoreDisplay = document.getElementById('score-display');
+        const pronounceBtn = document.getElementById('pronounce-btn');
+        const soundToggle = document.getElementById('sound-toggle');
+
+        // 音效状态
+        let soundEnabled = true;
+
+        // 旋转按钮
+        rotateBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            e.preventDefault()
+
+            if (!unitTestCard.classList.contains('hidden')) {
+                if (randomUnit.checked == true) {
+                    unitRandom = 0;
+                }
+            } else {
+                if (randomUnit.checked == true) {
+                    unitRandom = 1;
+                }
+            }
+            if (!weekTestCard.classList.contains('hidden')) {
+                if (randomWeek.checked == true) {
+                    weekRandom = 0;
+                }
+            } else {
+                if (randomWeek.checked == true) {
+                    weekRandom = 1;
+                }
+            }
+
+
+            titleI.classList.toggle('text-purple-600')
+            titleText.classList.toggle('text-purple-600')
+            rotateI.classList.toggle('rotate-180')
+            rotateI.classList.toggle('text-purple-600')
+            unitTestCard.classList.toggle('hidden')
+            weekTestCard.classList.toggle('hidden')
+            backToStartBtn.classList.toggle('hover:text-purple-600')
+            pronounceBtn.classList.toggle('bg-purple-600/10')
+            pronounceBtn.classList.toggle('text-purple-600')
+            pronounceBtn.classList.toggle('hover:bg-purple-600/20')
+            wordHint.classList.toggle('text-purple-600')
+            nextBtn.classList.toggle('bg-purple-600')
+            nextBtn.classList.toggle('hover:bg-purple-600/90')
+            btn.classList.toggle('bg-purple-600')
+            btn.classList.toggle('hover:bg-purple/90')
+            finishBtn.classList.toggle('bg-purple-600')
+            finishBtn.classList.toggle('hover:bg-purple/90')
+            checkBtn.classList.toggle('bg-purple-600')
+            checkBtn.classList.toggle('hover:bg-purple/90')
+        })
+
+        // 下拉菜单切换
+        unitTestBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            e.preventDefault()
+
+            unitDropdown.classList.toggle('hidden');
+            unitChevron.classList.toggle('rotate-180');
+            weekDropdown.classList.add('hidden');
+            weekChevron.classList.remove('rotate-180');
+        });
+
+        weekTestBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            e.preventDefault()
+            
+            weekDropdown.classList.toggle('hidden');
+            weekChevron.classList.toggle('rotate-180');
+            unitDropdown.classList.add('hidden');
+            unitChevron.classList.remove('rotate-180');
+        });
+
+        unitTestBtn.addEventListener('touchstar', function (e) {
+            e.stopPropagation()
+            e.preventDefault()
+
+            unitDropdown.classList.toggle('hidden');
+            unitChevron.classList.toggle('rotate-180');
+            weekDropdown.classList.add('hidden');
+            weekChevron.classList.remove('rotate-180');
+        });
+
+        weekTestBtn.addEventListener('touchstar', function (e) {
+            e.stopPropagation()
+            e.preventDefault()
+
+            weekDropdown.classList.toggle('hidden');
+            weekChevron.classList.toggle('rotate-180');
+            unitDropdown.classList.add('hidden');
+            unitChevron.classList.remove('rotate-180');
+        });
+
+        // 点击其他区域关闭下拉菜单
+        document.addEventListener('click', (e) => {
+            if (!unitTestBtn.contains(e.target) && !unitDropdown.contains(e.target)) {
+                unitDropdown.classList.add('hidden');
+                unitChevron.classList.remove('rotate-180');
+            }
+
+            if (!weekTestBtn.contains(e.target) && !weekDropdown.contains(e.target)) {
+                weekDropdown.classList.add('hidden');
+                weekChevron.classList.remove('rotate-180');
+            }
+        });
+
+        // 选择测试类型和编号
+        testOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                currentTestType = option.dataset.type;
+                if (unitRandom === 1) {
+                    currentTestType = 'unit'
+                    currentTestType = option.dataset.type;
+                }
+                if (weekRandom === 1) {
+                    currentTestType = 'week'
+                    currentTestType = option.dataset.type;
+                }
+                currentTestNumber = parseInt(option.dataset.number);
+
+                console.log(currentTestType, unitRandom, weekRandom)
+
+                // 初始化测试
+                startTest();
+            });
+        });
+
+        // 返回开始页面
+        backToStartBtn.addEventListener('click', () => {
+            spellingPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+        });
+
+        // 完成测试后返回测试页面
+        btn.addEventListener('click', () => {
+            completionModal.classList.add('hidden');
+        });
+
+        // 完成测试后返回首页
+        finishBtn.addEventListener('click', () => {
+            completionModal.classList.add('hidden');
+            spellingPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+        });
+
+        // 检查拼写
+        checkBtn.addEventListener('click', checkSpelling);
+
+        // 按Enter键检查拼写
+        spellingInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                checkSpelling();
+            }
+            if (e.key === 'Backspace') {
+                feedback.classList.add('hidden')
+            }
+        });
+
+        // 上一个单词
+        prevBtn.addEventListener('click', () => {
+            if (currentWordIndex > 0) {
+                currentWordIndex--;
+                updateWordDisplay();
+                resetInputAndFeedback();
+                updateNavigationButtons();
+            }
+        });
+
+        // 下一个单词
+        nextBtn.addEventListener('click', () => {
+            if (currentWordIndex < currentWords.length - 1) {
+                currentWordIndex++;
+                updateWordDisplay();
+                resetInputAndFeedback();
+                updateNavigationButtons();
+            } else {
+                // 最后一个单词，显示完成对话框
+                showCompletionModal();
+            }
+        });
+
+        // 发音按钮
+        pronounceBtn.addEventListener('click', () => {
+            if (soundEnabled) {
+                const word = currentWords[currentWordIndex].word;
+                speakWord(word);
+            }
+        });
+
+        // 声音开关
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            const icon = soundToggle.querySelector('i');
+            if (soundEnabled) {
+                icon.classList.remove('fa-volume-off');
+                icon.classList.add('fa-volume-up');
+            } else {
+                icon.classList.remove('fa-volume-up');
+                icon.classList.add('fa-volume-off');
+            }
+        });
+
+        // 选择乱序
+        randomUnit.addEventListener('click', () => {
+            if (randomUnit.checked === true) {
+                unitRandom = 1
+            } else if (randomUnit.checked === false) {
+                unitRandom = 0
+            }
+        })
+        randomWeek.addEventListener('click', () => {
+            if (randomWeek.checked === true) {
+                weekRandom = 1
+            } else if (randomWeek.checked === false) {
+                weekRandom = 0
+            }
+        })
+
+        // 乱序单词表
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1)); // 随机生成 [0, i] 的整数
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];   // 交换位置
+            }
+            return newArray;
+        }
+
+        // 开始测试
+        function startTest() {
+            // 获取当前测试的单词列表
+            const baseWords = [...wordDatabase[currentTestType][currentTestNumber]]
+            currentWords = weekRandom ===1 || unitRandom === 1 ? shuffleArray(baseWords) : [...baseWords];
+            currentWordIndex = 0;
+            userScore = 0;
+
+            // 更新标题
+            const testTypeText = currentTestType === 'unit' ? '单元' : '周';
+            testTitle.textContent = `${testTypeText} ${currentTestNumber} - 拼写测试`;
+
+            // 显示第一个单词
+            updateWordDisplay();
+            resetInputAndFeedback();
+            updateNavigationButtons();
+
+            // 切换页面
+            startPage.classList.add('hidden');
+            spellingPage.classList.remove('hidden');
+
+            // 输入框自动获得焦点
+            spellingInput.focus()
+
+            // 自动发音第一个单词
+            if (soundEnabled) {
+                setTimeout(() => {
+                    speakWord(currentWords[currentWordIndex].word);
+                }, 500);
+            }
+        }
+
+        // 更新单词显示
+        function updateWordDisplay() {
+            const currentWord = currentWords[currentWordIndex];
+            wordHint.textContent = currentWord.word;
+            wordDefinition.textContent = currentWord.definition;
+            progressIndicator.textContent = `${currentWordIndex + 1}/${currentWords.length}`;
+
+            // 自动发音
+            if (soundEnabled) {
+                speakWord(currentWord.word);
+            }
+        }
+
+        // 重置输入框和反馈
+        function resetInputAndFeedback() {
+            spellingInput.value = '';
+            feedback.classList.add('hidden');
+            spellingInput.focus();
+        }
+
+        // 更新导航按钮状态
+        function updateNavigationButtons() {
+            prevBtn.disabled = currentWordIndex === 0;
+
+            if (currentWordIndex === currentWords.length - 1) {
+                nextBtn.innerHTML = '完成<i class="fa fa-check ml-2"></i>';
+            } else {
+                nextBtn.innerHTML = '下一个<i class="fa fa-chevron-right ml-2"></i>';
+            }
+        }
+
+        // 检查拼写
+        function checkSpelling() {
+            const userInput = spellingInput.value.trim().toLowerCase();
+            const correctWord = currentWords[currentWordIndex].word.toLowerCase();
+
+            if (userInput === correctWord) {
+                // 拼写正确
+                feedback.textContent = '正确！太棒了！';
+                feedback.className = 'mt-3 text-green-600 font-medium';
+                feedback.classList.remove('hidden');
+
+                // 如果是第一次答对，增加分数
+                if (!currentWords[currentWordIndex].answeredCorrectly) {
+                    userScore++;
+                    currentWords[currentWordIndex].answeredCorrectly = true;
+                }
+
+                // 播放成功音效
+                if (soundEnabled) {
+                    playSound('success');
+                }
+
+                // 自动聚焦到下一个按钮
+                nextBtn.focus();
+            } else {
+                // 拼写错误
+                feedback.textContent = `错误。正确拼写是：${correctWord}`;
+                feedback.className = 'mt-3 text-red-600 font-medium';
+                feedback.classList.remove('hidden');
+
+                // 播放错误音效
+                if (soundEnabled) {
+                    playSound('error');
+                }
+            }
+        }
+
+        // 显示完成对话框
+        function showCompletionModal() {
+            scoreDisplay.textContent = `你的得分：${userScore}/${currentWords.length}`;
+            completionModal.classList.remove('hidden');
+        }
+
+        // 发音功能
+        function speakWord(word) {
+            // 使用Web Speech API
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+
+            speechSynthesis.speak(utterance);
+        }
+
+        // 播放音效
+        function playSound(type) {
+            // 创建音频上下文
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'success') {
+                // 成功音效：上升的音调
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(660, audioContext.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'error') {
+                // 错误音效：下降的音调
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(330, audioContext.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            }
+        }
+
+    </script>
+</body>
+
+</html>
