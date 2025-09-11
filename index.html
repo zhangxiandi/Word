@@ -442,6 +442,7 @@
                 <div class="mb-8 text-center">
                     <h3 class="text-lg md:text-xl font-semibold text-gray-500 mb-2" id="test-title">单元 1 - 基础词汇</h3>
                     <div class="flex justify-center items-center mb-4">
+                        <audio controls id="audio-player" class="hidden"></audio>
                         <button id="pronounce-btn"
                             class="p-3 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-custom">
                             <i class="fa fa-volume-up"></i>
@@ -449,6 +450,7 @@
                     </div>
                     <p class="text-3xl md:text-4xl font-bold text-primary mb-2 hidden" id="word-hint">apple</p>
                     <p class="text-gray-500 italic" id="word-definition">n. 苹果</p>
+                    <!-- <p class="text-gray-500 bg-gray-500" id="word-soundmark">000</p> -->
                 </div>
 
                 <div class="mb-8">
@@ -487,15 +489,18 @@
                             <i class="fa fa-check text-secondary text-2xl"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-2">测试完成！</h3>
-                        <p class="text-gray-600" id="score-display">你的得分：8/10</p>
                     </div>
                     <div class="flex justify-around">
                         <button id="btn"
-                            class="w-1/3 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
+                            class="w-1/4 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
                             返回
                         </button>
+                        <button id="callback-btn"
+                            class="w-1/4 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
+                            重试
+                        </button>
                         <button id="finish-btn"
-                            class="w-1/3 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
+                            class="w-1/4 bg-primary hover:bg-primary/90 text-white py-3 rounded-lg transition-custom">
                             返回首页
                         </button>
                     </div>
@@ -705,19 +710,21 @@
         const testOptions = document.querySelectorAll('.test-option');
         const backToStartBtn = document.getElementById('back-to-start');
         const btn = document.getElementById('btn')
+        const callbackBtn = document.getElementById('callback-btn')
         const finishBtn = document.getElementById('finish-btn');
 
         const testTitle = document.getElementById('test-title');
         const wordHint = document.getElementById('word-hint');
         const wordDefinition = document.getElementById('word-definition');
+        const wordSoundmark = document.getElementById('word-soundmark')
         const spellingInput = document.getElementById('spelling-input');
         const checkBtn = document.getElementById('check-btn');
         const feedback = document.getElementById('feedback');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         const progressIndicator = document.getElementById('progress-indicator');
-        const scoreDisplay = document.getElementById('score-display');
         const pronounceBtn = document.getElementById('pronounce-btn');
+        const audioPlayer = document.getElementById('audio-player')
         const soundToggle = document.getElementById('sound-toggle');
 
         // 音效状态
@@ -762,11 +769,11 @@
             nextBtn.classList.toggle('bg-purple-600')
             nextBtn.classList.toggle('hover:bg-purple-600/90')
             btn.classList.toggle('bg-purple-600')
-            btn.classList.toggle('hover:bg-purple/90')
+            btn.classList.toggle('hover:bg-purple-600/90')
             finishBtn.classList.toggle('bg-purple-600')
-            finishBtn.classList.toggle('hover:bg-purple/90')
+            finishBtn.classList.toggle('hover:bg-purple-600/90')
             checkBtn.classList.toggle('bg-purple-600')
-            checkBtn.classList.toggle('hover:bg-purple/90')
+            checkBtn.classList.toggle('hover:bg-purple-600/90')
         })
 
         // 下拉菜单切换
@@ -892,6 +899,16 @@
             completionModal.classList.add('hidden');
         });
 
+        // 完成测试后重新测试
+        callbackBtn.addEventListener('click', () => {
+            completionModal.classList.add('hidden');
+            startTest()
+        })
+        callbackBtn.addEventListener('touchstar', () => {
+            completionModal.classList.add('hidden');
+            startTest()
+        })
+
         // 完成测试后返回首页
         finishBtn.addEventListener('click', () => {
             completionModal.classList.add('hidden');
@@ -913,7 +930,7 @@
             if (e.key === 'Enter') {
                 checkSpelling();
             }
-            if (e.key === 'Backspace') {
+            if (e.key !== 'Enter') {
                 feedback.classList.add('hidden')
             }
         });
@@ -967,12 +984,22 @@
                 speakWord(word);
             }
         });
+        pronounceBtn.addEventListener('mousedown', (e) => {
+            if (e.target === pronounceBtn && document.activeElement === spellingInput) {
+                e.preventDefault()
+            }
+        })
         pronounceBtn.addEventListener('touchstar', () => {
             if (soundEnabled) {
                 const word = currentWords[currentWordIndex].word;
                 speakWord(word);
             }
         });
+        pronounceBtn.addEventListener('touchend', (e) => {
+            if (e.target === pronounceBtn && document.activeElement === spellingInput) {
+                e.preventDefault()
+            }
+        })
 
         // 声音开关
         soundToggle.addEventListener('click', () => {
@@ -1075,6 +1102,7 @@
             const currentWord = currentWords[currentWordIndex];
             wordHint.textContent = currentWord.word;
             wordDefinition.textContent = currentWord.definition;
+            // wordSoundmark.textContent = 
             progressIndicator.textContent = `${currentWordIndex + 1}/${currentWords.length}`;
 
             // 自动发音
@@ -1140,17 +1168,23 @@
 
         // 显示完成对话框
         function showCompletionModal() {
-            scoreDisplay.textContent = `你的得分：${userScore}/${currentWords.length}`;
             completionModal.classList.remove('hidden');
         }
 
         // 发音功能
         function speakWord(word) {
             // 使用Web Speech API
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
+            // const utterance = new SpeechSynthesisUtterance(word);
+            // utterance.lang = 'en-US';
 
-            speechSynthesis.speak(utterance);
+            // speechSynthesis.speak(utterance);
+
+            // 使用有道 API
+            const sound = `http://dict.youdao.com/dictvoice?type=0&audio=${word}`
+            audioPlayer.src = sound
+
+            audioPlayer.play()
+
         }
 
         // 播放音效
