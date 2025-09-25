@@ -450,7 +450,7 @@
                     </div>
                     <p class="text-3xl md:text-4xl font-bold text-primary mb-2 hidden" id="word-hint">apple</p>
                     <p class="text-gray-500 italic" id="word-definition">n. 苹果</p>
-                    <!-- <p class="text-gray-500 bg-gray-500" id="word-soundmark">000</p> -->
+                    <p class="text-gray-500 bg-gray-500" id="word-soundmark">000</p>
                 </div>
 
                 <div class="mb-8">
@@ -625,54 +625,21 @@
             },
             // 周测单词
             week: {
-                1: [
-                    { word: "one", definition: "num. 一" },
-                    { word: "two", definition: "num. 二" },
-                    { word: "three", definition: "num. 三" },
-                    { word: "four", definition: "num. 四" },
-                    { word: "five", definition: "num. 五" },
-                    { word: "six", definition: "num. 六" },
-                    { word: "seven", definition: "num. 七" },
-                    { word: "eight", definition: "num. 八" },
-                    { word: "nine", definition: "num. 九" },
-                    { word: "ten", definition: "num. 十" }
-                ],
-                2: [
-                    { word: "red", definition: "adj. 红色的" },
-                    { word: "blue", definition: "adj. 蓝色的" },
-                    { word: "green", definition: "adj. 绿色的" },
-                    { word: "yellow", definition: "adj. 黄色的" },
-                    { word: "black", definition: "adj. 黑色的" },
-                    { word: "white", definition: "adj. 白色的" },
-                    { word: "purple", definition: "adj. 紫色的" },
-                    { word: "orange", definition: "adj. 橙色的" },
-                    { word: "pink", definition: "adj. 粉色的" },
-                    { word: "brown", definition: "adj. 棕色的" }
-                ],
-                3: [
-                    { word: "monday", definition: "n. 星期一" },
-                    { word: "tuesday", definition: "n. 星期二" },
-                    { word: "wednesday", definition: "n. 星期三" },
-                    { word: "thursday", definition: "n. 星期四" },
-                    { word: "friday", definition: "n. 星期五" },
-                    { word: "saturday", definition: "n. 星期六" },
-                    { word: "sunday", definition: "n. 星期日" },
-                    { word: "month", definition: "n. 月" },
-                    { word: "year", definition: "n. 年" },
-                    { word: "day", definition: "n. 天" }
-                ],
-                4: [
-                    { word: "run", definition: "v. 跑" },
-                    { word: "jump", definition: "v. 跳" },
-                    { word: "walk", definition: "v. 走" },
-                    { word: "swim", definition: "v. 游泳" },
-                    { word: "sing", definition: "v. 唱歌" },
-                    { word: "dance", definition: "v. 跳舞" },
-                    { word: "read", definition: "v. 读" },
-                    { word: "write", definition: "v. 写" },
-                    { word: "draw", definition: "v. 画" },
-                    { word: "play", definition: "v. 玩" }
-                ]
+                1: window.weekWords.Week1,
+                2: window.weekWords.Week2,
+                3: window.weekWords.Week3,
+                4: window.weekWords.Week4,
+                5: window.weekWords.Week5,
+                6: window.weekWords.Week6,
+                7: window.weekWords.Week7,
+                8: window.weekWords.Week8,
+                9: window.weekWords.Week9,
+                10: window.weekWords.Week10,
+                11: window.weekWords.Week11,
+                12: window.weekWords.Week12,
+                13: window.weekWords.Week13,
+                14: window.weekWords.Week14,
+                15: window.weekWords.Week15
             }
         };
 
@@ -995,7 +962,7 @@
                 speakWord(word);
             }
         });
-        pronounceBtn.addEventListener('touchend', (e) => {
+        pronounceBtn.addEventListener('touchstar', (e) => {
             if (e.target === pronounceBtn && document.activeElement === spellingInput) {
                 e.preventDefault()
             }
@@ -1024,6 +991,11 @@
                 icon.classList.add('fa-volume-off');
             }
         });
+
+        // 显示音标
+        wordSoundmark.addEventListener('click', () => {
+            wordSoundmark.classList.toggle('bg-gray-500')
+        })
 
         // 选择乱序
         randomUnit.addEventListener('click', () => {
@@ -1098,11 +1070,25 @@
         }
 
         // 更新单词显示
-        function updateWordDisplay() {
+        async function updateWordDisplay() {
             const currentWord = currentWords[currentWordIndex];
             wordHint.textContent = currentWord.word;
             wordDefinition.textContent = currentWord.definition;
-            // wordSoundmark.textContent = 
+
+            // 使用https://github.com/meetDeveloper/freeDictionaryAPI
+            try {
+                const yinbiao = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord.word}`)
+                const phonetic = await yinbiao.json()
+                const soundMark = phonetic[0].phonetic
+                // console.log(yinbiao)
+                // console.log(phonetic)
+                // console.log(soundMark)
+                wordSoundmark.textContent = soundMark
+            } catch (error) {
+                console.log('ERROR')
+                console.log(error)
+            }
+            
             progressIndicator.textContent = `${currentWordIndex + 1}/${currentWords.length}`;
 
             // 自动发音
