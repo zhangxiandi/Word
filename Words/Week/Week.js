@@ -1394,26 +1394,26 @@ window.weekWords.Week7 = [
     { word: "handbag", definition: "n. 手提包"}
 ],
 window.weekWords.Week8 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week9 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week10 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week11 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week12 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week13 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week14 = [
-
+    { word: "", definition: ""}
 ],
 window.weekWords.Week15 = [
-
+    { word: "", definition: ""}
 ]
