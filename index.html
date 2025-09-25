@@ -517,6 +517,7 @@
     </footer>
 
     <script src="./Words/Unit/Unit.js"></script>
+    <script src="./Words/Week/Week.js"></script>
     <script>
         // 单词数据库
         const wordDatabase = {
@@ -994,6 +995,9 @@
 
         // 显示音标
         wordSoundmark.addEventListener('click', () => {
+            wordSoundmark.classList.toggle('bg-gray-500')
+        })
+        wordSoundmark.addEventListener('touchstar', () => {
             wordSoundmark.classList.toggle('bg-gray-500')
         })
 
