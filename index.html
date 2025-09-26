@@ -1083,9 +1083,11 @@
             try {
                 const yinbiao = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord.word}`)
                 const phonetic = await yinbiao.json()
-                const soundMark = phonetic[0].phonetic
+                const arrayLen = phonetic[0].phonetics.length
+                const soundMark = phonetic[0].phonetics[arrayLen - 1].text
                 // console.log(yinbiao)
                 // console.log(phonetic)
+                // console.log(arrayLen)
                 // console.log(soundMark)
                 wordSoundmark.textContent = soundMark
             } catch (error) {
